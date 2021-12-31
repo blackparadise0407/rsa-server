@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 
-client = MongoClient("mongodb://localhost:27017")
+client = MongoClient("mongodb://localhost:27017/")
 
 database = client.rsa
 
-user_collection = database.get_collection("users_collection")
+user_collection = database.get_collection("users")
