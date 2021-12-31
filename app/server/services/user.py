@@ -1,9 +1,13 @@
 from ..config.database import user_collection
+from ..schemas.user import user_entity
 
 
-async def get_all_users():
+def get_all_users():
     users = []
     for user in user_collection.find():
-        print(user)
-        users.append({"username": user["username"], "password": user["password"]})
+        users.append(user_entity(user))
     return users
+
+
+def get_user_by_username(username: str):
+    return user_collection.find_one({username})
