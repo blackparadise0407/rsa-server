@@ -1,4 +1,4 @@
-def ResponseModel(data={}, message="ok", code=200):
+def ResponseModel(data ={}, message="ok", code=200):
     return {
         "data": data,
         "code": code,
