@@ -73,7 +73,6 @@ def create_user_with_encryption(data: RegisterDto) -> str:
 
 
 def jwt_authentication(token: str = Depends(oauth2_scheme)):
-    print(token)
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
