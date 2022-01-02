@@ -1,17 +1,18 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from ecdsa.util import randrange_from_seed__truncate_bits
 
+from ecdsa.util import randrange_from_seed__truncate_bits
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt, ExpiredSignatureError
+from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-from ..schemas.auth_schema import LoginDto, RegisterDto
 from ..common.database import user_collection
 from ..common.exceptions import BadRequestException, UnauthorizedException
-
+from ..common.serialize import serialize_dict
+from ..schemas.auth_schema import LoginDto, RegisterDto
+from ..schemas.user_schema import user_entity
 from .user_service import get_user_by_id, get_user_by_username
 
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
@@ -68,7 +69,7 @@ def create_user_with_encryption(data: RegisterDto) -> str:
         raise BadRequestException(detail="User already exists")
     hashed_password = get_password_hash(data.password)
     saved_user = {"username": data.username, "password": hashed_password}
-    user_id = user_collection.insert_one(saved_user).inserted_id
+    user_collection.insert_one(saved_user).inserted_id
     return "Register successfully"
 
 
@@ -85,4 +86,4 @@ def jwt_authentication(token: str = Depends(oauth2_scheme)):
     user = get_user_by_id(user_id)
     if user is None:
         raise UnauthorizedException()
-    return user
+    return user_entity(user)

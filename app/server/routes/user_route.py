@@ -11,6 +11,6 @@ router = APIRouter()
 
 
 @router.get("", response_description="Retrieve all users")
-def get_all_users_data():
+async def get_all_users_data():
     users = get_all_users()
     return ResponseModel(users, "Get all users successfuly")
