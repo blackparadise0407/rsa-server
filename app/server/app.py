@@ -1,9 +1,9 @@
 import traceback
 
-from fastapi import FastAPI, Form
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.param_functions import Depends
-from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -39,6 +39,8 @@ app.include_router(
     prefix="/image",
     dependencies=[Depends(jwt_authentication)],
 )
+
+app.mount("/public", StaticFiles(directory="public"), name="public")
 
 
 async def catch_exceptions_middleware(request: Request, call_next):
