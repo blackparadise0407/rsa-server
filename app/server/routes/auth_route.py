@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Body
 from fastapi.param_functions import Depends
-from pydantic import parse
 
-from ..common.serialize import serialize_dict
 from ..schemas.auth_schema import LoginDto, RegisterDto, TokenData
-from ..schemas.user_schema import UserDto, user_entity
+from ..schemas.user_schema import UserDto
 from ..services.auth_service import (
     create_user_with_encryption,
     jwt_authentication,

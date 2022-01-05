@@ -1,16 +1,16 @@
+import random
 from datetime import datetime, timedelta
 from typing import Optional
 
-from ecdsa.util import randrange_from_seed__truncate_bits
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel
 
 from ..common.database import user_collection
 from ..common.exceptions import BadRequestException, UnauthorizedException
-from ..common.serialize import serialize_dict
+from ..common.rsa import RSA
+from ..common.utils import hex_to_bin
 from ..schemas.auth_schema import LoginDto, RegisterDto
 from ..schemas.user_schema import user_entity
 from .user_service import get_user_by_id, get_user_by_username
@@ -57,6 +57,8 @@ def create_access_token(
 def validate_user_with_credentials(data: LoginDto):
     user = get_user_by_username(data.username)
     if not user:
+        raise BadRequestException(detail="User not found")
+    if user["username"] != data.username:
         raise BadRequestException(detail="Invalid credentials")
     if not verify_password(data.password, user["password"]):
         raise BadRequestException(detail="Invalid credentials")
@@ -68,7 +70,17 @@ def create_user_with_encryption(data: RegisterDto) -> str:
     if user:
         raise BadRequestException(detail="User already exists")
     hashed_password = get_password_hash(data.password)
-    saved_user = {"username": data.username, "password": hashed_password}
+    exponent, pem, pub = RSA.gen_key_pair()
+    encrypted_sym_key = hex(
+        int(RSA.encrypt(hex_to_bin(generate_random_sym_key()[2:]), pub, exponent), 2)
+    )
+    saved_user = {
+        "username": data.username,
+        "password": hashed_password,
+        "sym_key": encrypted_sym_key,
+        "pub": f"{exponent}.{pub}",
+        "pem": f"{exponent}.{pem}",
+    }
     user_collection.insert_one(saved_user).inserted_id
     return "Register successfully"
 
@@ -87,3 +99,7 @@ def jwt_authentication(token: str = Depends(oauth2_scheme)):
     if user is None:
         raise UnauthorizedException()
     return user_entity(user)
+
+
+def generate_random_sym_key() -> str:
+    return hex(random.getrandbits(128))
