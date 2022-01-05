@@ -1,4 +1,3 @@
-from typing import List
 from pydantic import BaseModel, validator
 
 
@@ -8,6 +7,7 @@ def image_entity(item) -> dict:
         "url": item["url"],
         "created_by_id": str(item["created_by_id"]),
         "created_at": str(item["created_at"]),
+        "blob": str(item.get("blob", "")),
     }
 
 
@@ -31,3 +31,4 @@ class ImageDto(BaseModel):
     url: str
     created_by_id: str
     created_at: int
+    blob: str
