@@ -18,6 +18,7 @@ from ..services.image_service import (
     generate_url,
     get_fdecrypted_sym_key,
     get_image_by_creator,
+    get_shared_image_of_user,
 )
 
 router = APIRouter()
@@ -29,7 +30,9 @@ router = APIRouter()
     response_model=List[ImageDto],
 )
 async def get_current_user_images(user: UserDto = Depends(jwt_authentication)):
-    return parse_obj_as(List[ImageDto], get_image_by_creator(user))
+    shared_images = get_shared_image_of_user(user)
+    creator_images = get_image_by_creator(user)
+    return parse_obj_as(List[ImageDto], (creator_images + shared_images))
 
 
 @router.post("", response_description="Upload an image", response_model=ImageDto)
@@ -51,24 +54,24 @@ async def upload_image(
 @router.post(
     "/multiple", response_description="Upload multiple images", response_model=str
 )
-async def upload_image(
+async def upload_multiple_image(
     user: UserDto = Depends(jwt_authentication), files: List[UploadFile] = File(...)
 ):
     decrypted_sym_key = get_fdecrypted_sym_key(user["pem"], user["sym_key"])
     images = []
     for file in files:
         file_name = generate_filename(file.filename)
-        url = generate_url(file_name)
         file_path = path.join(getcwd(), "public", generate_filename(file.filename))
         async with open(file_path, "wb") as out_file:
             while content := await file.read(1024):
                 await out_file.write(content)
         encrypt_image(file_path, decrypted_sym_key)
         images.append({"file_path": file_path})
-    return create_multiple_image(images, user)
+    create_multiple_image(images, user)
+    return "Upload image(s) successfully"
 
 
 @router.delete("", response_model=str)
-def delete_many_by_id(ids: List[str]):
-    delete_images(ids)
-    return "Delete image(s) successfully"
+def delete_many_by_id(ids: List[str], user: UserDto = Depends(jwt_authentication)):
+    delete_images(ids, user)
+    return "Delete your's image(s) successfully"

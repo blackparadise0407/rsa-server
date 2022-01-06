@@ -8,6 +8,7 @@ def image_entity(item) -> dict:
         "created_by_id": str(item["created_by_id"]),
         "created_at": str(item["created_at"]),
         "blob": str(item.get("blob", "")),
+        "created_by": item.get("created_by"),
     }
 
 
@@ -32,3 +33,4 @@ class ImageDto(BaseModel):
     created_by_id: str
     created_at: int
     blob: str
+    created_by: dict
