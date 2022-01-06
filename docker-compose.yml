@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  database:
+    image: mongo
+    ports:
+      - 27017:27017
+  server:
+    build: .
+    environment:
+      - DATABASE_NAME=rsa
+      - MONGO_URI=mongodb://database:27017/
+    ports:
+      - 8000:8000
+    depends_on:
+      - database
