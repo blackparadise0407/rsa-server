@@ -33,6 +33,20 @@ def create_image(file_path: str, user: UserDto) -> dict:
     return image_entity(cursor)
 
 
+def create_multiple_image(files: List[dict], user: UserDto):
+    saved_images = []
+    for file in files:
+        saved_images.append(
+            {
+                "url": file["file_path"],
+                "created_by_id": ObjectId(user["id"]),
+                "created_at": current_timestamp(),
+            }
+        )
+    image_collection.insert_many(saved_images)
+    return "Upload image successfully"
+
+
 def get_image_by_creator(user: UserDto) -> list:
     cursor = image_collection.find({"created_by_id": ObjectId(user["id"])})
     if cursor.count() == 0:

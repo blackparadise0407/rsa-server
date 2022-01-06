@@ -11,6 +11,7 @@ from ..schemas.user_schema import UserDto
 from ..services.auth_service import jwt_authentication
 from ..services.image_service import (
     create_image,
+    create_multiple_image,
     delete_images,
     encrypt_image,
     generate_filename,
@@ -35,16 +36,36 @@ async def get_current_user_images(user: UserDto = Depends(jwt_authentication)):
 async def upload_image(
     user: UserDto = Depends(jwt_authentication), file: UploadFile = File(...)
 ):
+    decrypted_sym_key = get_fdecrypted_sym_key(user["pem"], user["sym_key"])
     file_name = generate_filename(file.filename)
     url = generate_url(file_name)
     file_path = path.join(getcwd(), "public", generate_filename(file.filename))
     async with open(file_path, "wb") as out_file:
         while content := await file.read(1024):
             await out_file.write(content)
-    decrypted_sym_key = get_fdecrypted_sym_key(user["pem"], user["sym_key"])
     encrypt_image(file_path, decrypted_sym_key)
     image = create_image(url, user)
     return ImageDto.parse_obj(image)
+
+
+@router.post(
+    "/multiple", response_description="Upload multiple images", response_model=str
+)
+async def upload_image(
+    user: UserDto = Depends(jwt_authentication), files: List[UploadFile] = File(...)
+):
+    decrypted_sym_key = get_fdecrypted_sym_key(user["pem"], user["sym_key"])
+    images = []
+    for file in files:
+        file_name = generate_filename(file.filename)
+        url = generate_url(file_name)
+        file_path = path.join(getcwd(), "public", generate_filename(file.filename))
+        async with open(file_path, "wb") as out_file:
+            while content := await file.read(1024):
+                await out_file.write(content)
+        encrypt_image(file_path, decrypted_sym_key)
+        images.append({"file_path": file_path})
+    return create_multiple_image(images, user)
 
 
 @router.delete("", response_model=str)
