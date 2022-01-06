@@ -15,6 +15,7 @@ from ..services.image_service import (
     encrypt_image,
     generate_filename,
     generate_url,
+    get_fdecrypted_sym_key,
     get_image_by_creator,
 )
 
@@ -40,7 +41,8 @@ async def upload_image(
     async with open(file_path, "wb") as out_file:
         while content := await file.read(1024):
             await out_file.write(content)
-    encrypt_image(file_path, user["sym_key"])
+    decrypted_sym_key = get_fdecrypted_sym_key(user["pem"], user["sym_key"])
+    encrypt_image(file_path, decrypted_sym_key)
     image = create_image(url, user)
     return ImageDto.parse_obj(image)
 

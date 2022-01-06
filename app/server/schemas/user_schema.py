@@ -6,6 +6,8 @@ def user_entity(item) -> dict:
         "id": str(item["_id"]),
         "username": str(item["username"]),
         "sym_key": str(item["sym_key"]),
+        "pub": str(item["pub"]),
+        "pem": str(item["pem"]),
     }
 
 
@@ -17,3 +19,5 @@ class UserDto(BaseModel):
     id: str
     username: str
     sym_key: str
+    pub: str
+    pem: str

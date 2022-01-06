@@ -1,4 +1,3 @@
-import random
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -10,7 +9,7 @@ from passlib.context import CryptContext
 from ..common.database import user_collection
 from ..common.exceptions import BadRequestException, UnauthorizedException
 from ..common.rsa import RSA
-from ..common.utils import hex_to_bin
+from ..common.utils import generate_random_sym_key, hex_to_bin
 from ..schemas.auth_schema import LoginDto, RegisterDto
 from ..schemas.user_schema import user_entity
 from .user_service import get_user_by_id, get_user_by_username
@@ -71,8 +70,8 @@ def create_user_with_encryption(data: RegisterDto) -> str:
         raise BadRequestException(detail="User already exists")
     hashed_password = get_password_hash(data.password)
     exponent, pem, pub = RSA.gen_key_pair()
-    encrypted_sym_key = hex(
-        int(RSA.encrypt(hex_to_bin(generate_random_sym_key()[2:]), pub, exponent), 2)
+    encrypted_sym_key = RSA.encrypt(
+        hex_to_bin(generate_random_sym_key()[2:]), pub, exponent
     )
     saved_user = {
         "username": data.username,
@@ -100,6 +99,3 @@ def jwt_authentication(token: str = Depends(oauth2_scheme)):
         raise UnauthorizedException()
     return user_entity(user)
 
-
-def generate_random_sym_key() -> str:
-    return hex(random.getrandbits(128))

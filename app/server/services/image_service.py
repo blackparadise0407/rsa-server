@@ -6,7 +6,7 @@ from bson import ObjectId
 
 from ..common.aes import AES128
 from ..common.database import image_collection
-from ..common.utils import current_timestamp
+from ..common.utils import current_timestamp, get_fdecrypted_sym_key
 from ..schemas.image_schema import image_entities, image_entity
 from ..schemas.user_schema import UserDto
 
@@ -34,10 +34,14 @@ def create_image(file_path: str, user: UserDto) -> dict:
 
 
 def get_image_by_creator(user: UserDto) -> list:
+    cursor = image_collection.find({"created_by_id": ObjectId(user["id"])})
+    if cursor.count() == 0:
+        return []
+    decrypted_sym_key = get_fdecrypted_sym_key(user["pem"], user["sym_key"])
     # Init aes instance
-    aes = AES128(bytes.fromhex(user["sym_key"][2:]))
+    aes = AES128(bytes.fromhex(decrypted_sym_key))
     images = []
-    for image in image_collection.find({"created_by_id": ObjectId(user["id"])}):
+    for image in cursor:
         images.append(image)
         filename = get_filename_from_path(image["url"])
         file_path = get_public_file_absolute_path(filename)
@@ -62,7 +66,7 @@ def delete_images(id_list: List[str]):
 
 def encrypt_image(file_path: str, key: str):
     # Init aes instance
-    aes = AES128(bytes.fromhex(key[2:]))
+    aes = AES128(bytes.fromhex(key))
     # read binary file from path
     in_file = open(file_path, "rb")
     raw = in_file.read()

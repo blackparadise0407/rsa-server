@@ -112,6 +112,8 @@ class RSA:
 
     @staticmethod
     def encrypt(m: str, pub: int, exponent: int):
+        pub = int(pub)
+        exponent = int(exponent)
         length = len(m) // 8
         s = []  # Chứa chuỗi 8 phần tử của m
         c = []  # Chứa dãy nhị phân của 1 phần tử s
@@ -123,24 +125,11 @@ class RSA:
 
     @staticmethod
     def decrypt(cipher_text: str, pem: int, exponent: int):
+        pem = int(pem)
+        exponent = int(exponent)
         s = cipher_text.split(" ")
         decrypt = ""
         length = len(s)
         for i in range(length):
             decrypt += f"{powerMod(int(s[i], 2), pem, exponent):08b}"
         return decrypt
-
-
-exponent, pem, pub = RSA.gen_key_pair()
-print(f"Exponent: {exponent} Pem: {pem} Pub: {pub}")
-
-enc = RSA.encrypt(
-    "01001000000111101100110001011011100101011001011001110001101000101010101001011101100001000011101010110001100110011011010011000100",
-    pub,
-    exponent,
-)
-
-dec = RSA.decrypt(enc, pem, exponent)
-assert "0x481ecc5b959671a2aa5d843ab199b4c4" == hex(int(dec, 2))
-print(hex(int(dec, 2)))
-
