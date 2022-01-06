@@ -10,6 +10,7 @@ from starlette.responses import Response
 from .routes.auth_route import router as AuthRouter
 from .routes.image_route import router as ImageRouter
 from .routes.user_route import router as UserRouter
+from .routes.shared_image_route import router as SharedImageRouter
 from .services.auth_service import jwt_authentication
 
 app = FastAPI()
@@ -37,6 +38,12 @@ app.include_router(
     ImageRouter,
     tags=["Image"],
     prefix="/image",
+    dependencies=[Depends(jwt_authentication)],
+)
+app.include_router(
+    SharedImageRouter,
+    tags=["Share image"],
+    prefix="/shared-image",
     dependencies=[Depends(jwt_authentication)],
 )
 

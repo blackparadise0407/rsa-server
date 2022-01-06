@@ -8,3 +8,6 @@ user_collection = database.get_collection("users")
 
 image_collection = database.get_collection("images")
 
+shared_image_collection = database.get_collection("shared_images")
+
+
